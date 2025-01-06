@@ -66,14 +66,8 @@ def do_evaluate(input_file, output_path, model_type, epochs, hidden_sizes, save_
                             "_" + str(hs) + \
                             ".png"
                 if save_img:
-                    learned_limit = int(len(actuals)*(percentage/100))
-                    actual_size = len(actuals)
-                    left_part = actuals[learned_limit+1:actual_size]
-                    right_part = actuals[:learned_limit]
-
                     plt.figure(figsize=(10, 6))
-                    plt.plot(left_part,  label="Actual Values1", marker="o")
-                    plt.plot(right_part, label="Actual Values2", marker="*")
+                    plt.plot(actuals,  label="Actual Values1", marker="o")
                     plt.plot(predictions, label="Predicted Values", marker="x")
                     plt.legend()
                     plt.title("Model Predictions vs Actuals for "+model.upper() + " model (epochs="+ str(epoch) + ", hidden_size="+str(hs)+" ) "  )
