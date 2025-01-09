@@ -21,7 +21,6 @@ def do_evaluate(input_file, output_path, model_type, epochs, hidden_sizes, save_
 
             for epoch in epochs:
                 trained_model = get_path_file(output_path, model, epoch, percentage, hs)
-                # print(trained_model)
 
                 if not os.path.exists(trained_model):
                     print("  Warning: File '%s' does not exist"%trained_model)
@@ -33,7 +32,6 @@ def do_evaluate(input_file, output_path, model_type, epochs, hidden_sizes, save_
                 # Step 1: Load the data
                 data = load_data(input_file)  # Replace with the path to your dataset
                 slice_size = int(len(data)/10)
-                # print("*** slice_size: %s"%slice_size)
                 test_dataset = TimeSeriesDataset(
                     data, input_size=slice_size, output_size=1) 
                 test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False)
@@ -50,7 +48,6 @@ def do_evaluate(input_file, output_path, model_type, epochs, hidden_sizes, save_
                 # Convert predictions and actuals to numpy arrays
                 predictions = np.concatenate(predictions).flatten()
                 actuals = np.concatenate(actuals).flatten()
-                # print(actuals)
                 
                 # Step 4: Calculate and print evaluation metrics
                 mae = np.mean(np.abs(predictions - actuals))
@@ -59,7 +56,6 @@ def do_evaluate(input_file, output_path, model_type, epochs, hidden_sizes, save_
                 print(f"    Root Mean Squared Error (RMSE): {rmse:.4f}")
 
                 # Step 5: Plot predictions vs actual values
-                # print(save_img)
                 file_name = "model_comparison_" + model.lower() \
                             + "_" + str(epoch) + \
                             "_" + str(percentage) + \
@@ -77,7 +73,6 @@ def do_evaluate(input_file, output_path, model_type, epochs, hidden_sizes, save_
                                 
                     file_path = output_path + "/" + file_name
                     print("    Saving comparison in: "+file_name)
-                    # print(file_path)
                     plt.savefig(file_path)
                 
                 # Step 6: Store values by absolute error

@@ -13,7 +13,6 @@ from optparse import OptionParser
 from pprint import pprint
 
 def choose(options):
-    # pprint(options)
     
     # if "chunk" in options.operation:
     print("Splitting input data by percentage...")
@@ -49,6 +48,7 @@ def choose(options):
 
 if __name__ == "__main__":
     valid_models = ['gru', 'rnn', 'lstm']
+    valid_operations = ['train', 'evaluate']
     parser = OptionParser()
     parser.add_option("-o", "--output_path", 
                       default = None,
@@ -76,7 +76,7 @@ if __name__ == "__main__":
     parser.add_option("-p", "--operation",
                       default=[], 
                       nargs=1,
-                      choices=('train', 'evaluate', 'chunk'),
+                      choices=('train', 'evaluate'),
                       action='append',
                       help = "Input amount of epochs for training")
 
@@ -120,7 +120,16 @@ if __name__ == "__main__":
         if len(invalid_elem)>0:
             parser.error("Invalid models "+str(invalid_elem)+" should be of type [rnn, lstm, gru]")
 
+    if not options.operation:
+        parser.error("Invalid operations should be of "+str(valid_operations))
+    else: 
+        reduced_model_list = list(set(options.operation))
+        invalid_elem = list(set(reduced_model_list) - set(valid_operations))
+        options.operation = reduced_model_list
+        if len(invalid_elem)>0:
+            parser.error("Invalid operations "+str(invalid_elem)+" should be of type [rnn, lstm, gru]")
+
     if not options.hidden_sizes:
         parser.error("Invalid hidden size(s)")
-    # print(options)
+    print(options)
     choose(options)

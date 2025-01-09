@@ -19,10 +19,8 @@ def do_train(data, output_path, model_type, epochs, hidden_sizes, learning_rate=
         for model in model_type:
             model_obj = create_model(model, hs)
             
-            # print(model)
             for epoch in epochs:
                 train_model_file = get_path_file(output_path, model, epoch, percentage, hs)
-                # print(train_model_file)
                 
                 print("  Training %s model with  %d%% of data(%d): (epochs=%d, hidden_size=%d)"%
                     (model.upper(), percentage, data_size, epoch, hs))
