@@ -226,7 +226,6 @@ if __name__ == "__main__":
         else:
             parser.error("Required amount of input data sources")
     elif options.input_data_sources is not None: 
-        options.input_
         data_sources = reduce_options(options.input_data_sources)
 
     if options.output_path is None or not os.path.exists(options.output_path):
@@ -246,6 +245,8 @@ if __name__ == "__main__":
 
     if not options.hidden_sizes:
         parser.error("Invalid hidden size(s)")
+    if not options.file_prefix:
+        parser.error("Invalid file prefix")
     if not options.download and not options.train and not options.validate:
         parser.error("Invalid operations should be set -w, -t or -v ")
 
