@@ -1,7 +1,11 @@
+import os
 import torch
 import torch.nn as nn
 import numpy as np
 import matplotlib.pyplot as plt
+
+from pprint import pprint
+from time_series_nn.models.configure_models import get_path_file
 
 def evaluate_model(model, dataloader, device):
     model.eval()
@@ -37,7 +41,7 @@ def validate_model(info):
     accum_losses = []
 
     # get information required to validaate model
-    model_obj     = info["objs"]["model_obj"]
+    model_obj     = info["objs"]["model"]
     dataloader    = info["objs"]["dataloader"]
     device        = info["objs"]['device']
     criterion     = info["objs"]['criterion']
@@ -83,10 +87,12 @@ def validate_model(info):
     rmse = np.sqrt(np.mean((predictions - actuals) ** 2))
     avg_losses = np.mean(accum_losses)
 
-    info["errors"].update({
-        "mae": mae,
-        "rmse": rmse,
-        'avg_losses': avg_losses
+    info.update({
+        "errors": {
+            "mae": mae,
+            "rmse": rmse,
+            'avg_losses': avg_losses
+        }
     })
     return info
 
@@ -112,11 +118,17 @@ def create_image(info):
             (model_type.lower(), epoch, hidden_size)
     plt.title(title)
 
-    file_name = output_path + "/" +\
-                "model_comparison_" + model_type.lower() + "_" + \
-                str(epoch) + "_" + str(percentage) + "_" + \
-                ".png"
-    print("    Saving comparison in "+file_name)
-    file_path = output_path + "/" + file_name
+    # change info configuration to create an image file name
+    image_info = info
+    image_info["conf"]["file_prefix"] = "comparison"
+    image_info["conf"]["extension"] = "png"
+    file_path = get_path_file(image_info)
+    print("    Saving comparison in "+file_path)
+
+    if not os.path.isdir(output_path):
+        print("Warning: Path not found: %s"%output_path)
+        return
+    
+    # create image for comparison
     plt.savefig(file_path)
     

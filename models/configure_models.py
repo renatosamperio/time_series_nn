@@ -5,12 +5,12 @@ from pprint import pprint
 def get_path_file(info):
 
     output_path = info["conf"]['output_path']
+    file_prefix = info["conf"]["file_prefix"]
     percentage  = int(info["conf"]['percentage']*100)
     model       = info["conf"]['model_type']
     epoch       = info["conf"]['epoch']
     hidden_size = info["conf"]['hidden_size']
     extension   = info["conf"]['extension']
-    file_prefix = info["conf"]["file_prefix"]
     ticker      = info["conf"]["ticker"]
 
     if file_prefix!="":
