@@ -1,3 +1,4 @@
+from os import path
 import yfinance as yf
 import pandas as pd
 from optparse import OptionParser
@@ -21,6 +22,7 @@ def get_stockanalysis_tickers(list_type, path_file):
     '''
         List obtained from https://stockanalysis.com/list
     '''
+
     path_file = path_file + "/" + list_type + ".csv"
     print("Parsing tickers list for "+path_file)
 

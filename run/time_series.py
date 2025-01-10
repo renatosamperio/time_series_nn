@@ -2,12 +2,8 @@ import torch
 import os
 import json
 
-# from time_series_nn.data.dataset import load_data, TimeSeriesDataset
-# from time_series_nn.train.evaluate import evaluate_model
-# from time_series_nn.train.do_evaluate import best_combination
 from time_series_nn.train.do_chunk import do_chunk 
 from torch.utils.data import DataLoader
-
 
 from optparse import OptionParser
 from pprint import pprint
@@ -26,7 +22,8 @@ def choose(options):
                 learning_rate = 0.001, percentage = options.chunk)
 
     if "evaluate" in options.operation:
-        from time_series_nn.train.do_evaluate import do_evaluate, best_combination
+        from time_series_nn.train.do_evaluate import do_evaluate
+        from time_series_nn.utils.sorts import best_combination
         print("Evaluating models...")
         errors = do_evaluate(options.input_file, options.output_path, 
                     options.model_type, options.epochs_sizes, options.hidden_sizes,

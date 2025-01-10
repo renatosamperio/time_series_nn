@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 
 from pprint import pprint
 from time_series_nn.models.configure_models import get_path_file
+from time_series_nn.utils.sorts import best_combination
+from time_series_nn.utils.io_ops import id_name_from_conf
 
 def evaluate_model(model, dataloader, device):
     model.eval()
@@ -55,7 +57,7 @@ def validate_model(info):
 
     # set object to evaluate
     print("  Evaluate %s model with %d%% of data(%d): (epochs=%d, hidden_size=%d)"%
-        (model_type.upper(), percentage, data_size, epochs, hidden_size))
+        (model_type.upper(), int(percentage*100), data_size, epochs, hidden_size))
     model_obj.eval()
 
     with torch.no_grad():
@@ -89,12 +91,25 @@ def validate_model(info):
 
     info.update({
         "errors": {
-            "mae": mae,
-            "rmse": rmse,
+            "abs_error": mae,
+            "sqe_error": rmse,
             'avg_losses': avg_losses
         }
     })
     return info
+
+def top_performers(errors, performance_keys, top_n=3):
+    for performance_key in performance_keys:
+        print("  Best performers based on '%s' are:"%(performance_key))
+        if (len(errors)>3):
+            # sort the models performance
+            sorted_errors = best_combination(errors, performance_key)
+            # get the top N elements
+            for idx in range(top_n):
+                top_performer = sorted_errors[idx]
+                performer_name = id_name_from_conf(top_performer)
+                print("    [%d] %s: %f"%(idx+1, 
+                    performer_name, top_performer[performance_key]))
 
 def create_image(info):
 
@@ -131,4 +146,5 @@ def create_image(info):
     
     # create image for comparison
     plt.savefig(file_path)
+    plt.close('all')
     

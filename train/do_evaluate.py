@@ -4,6 +4,7 @@ import os
 from time_series_nn.data.dataset import load_data, TimeSeriesDataset
 from time_series_nn.train.evaluate import evaluate_model
 from time_series_nn.models.create_model import create_model, get_path_file
+from time_series_nn.utils.io_ops import id_name
 
 from torch.utils.data import DataLoader
 
@@ -56,10 +57,8 @@ def do_evaluate(input_file, output_path, model_type, epochs, hidden_sizes, save_
                 print(f"    Root Mean Squared Error (RMSE): {rmse:.4f}")
 
                 # Step 5: Plot predictions vs actual values
-                file_name = "model_comparison_" + model.lower() \
-                            + "_" + str(epoch) + \
-                            "_" + str(percentage) + \
-                            "_" + str(hs) + \
+                file_name = "model_comparison_" + \
+                            id_name(model, epoch, percentage, hs) + \
                             ".png"
                 if save_img:
                     plt.figure(figsize=(10, 6))
@@ -89,28 +88,3 @@ def do_evaluate(input_file, output_path, model_type, epochs, hidden_sizes, save_
                 })
 
     return errors
-
-def best_combination(input_list, sort_key):
-    # Check if the sort_key exists in the dictionaries
-    if not all(isinstance(item, dict) and sort_key in item for item in input_list):
-        raise ValueError(f"All dictionaries must contain the key '{sort_key}'.")
-
-    # Sort the list of dictionaries based on the sort_key
-    sorted_data = sorted(input_list, key=lambda x: x[sort_key])
-    return sorted_data
-
-def best_combination_keys(input_list, sort_keys):
-    
-    # Validate that all dictionaries have the specified sort_keys
-    for sort_key in sort_keys:
-        if not all(sort_key in d for d in input_list):
-            raise ValueError(f"All dictionaries must contain the key '{sort_key}'.")
-    
-    # Validate that the sort_keys correspond to numerical values
-    for sort_key in sort_keys:
-        if not all(isinstance(d[sort_key], (int, float)) for d in input_list):
-            raise ValueError(f"The key '{sort_key}' must correspond to numerical values in all dictionaries.")
-
-    # Sort the list of dictionaries
-    # return sorted(input_list, key=lambda x: x[sort_keys])
-    return sorted(input_list, key=lambda x: tuple(x[key] for key in sort_keys))

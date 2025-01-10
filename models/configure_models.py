@@ -1,12 +1,14 @@
 import torch
 import torch.nn as nn
+from time_series_nn.utils.io_ops import id_name
+
 from pprint import pprint
 
 def get_path_file(info):
 
     output_path = info["conf"]['output_path']
     file_prefix = info["conf"]["file_prefix"]
-    percentage  = int(info["conf"]['percentage']*100)
+    percentage  = info["conf"]['percentage']
     model       = info["conf"]['model_type']
     epoch       = info["conf"]['epoch']
     hidden_size = info["conf"]['hidden_size']
@@ -18,12 +20,9 @@ def get_path_file(info):
 
     trained_model = output_path + "/" + file_prefix + \
                 ticker + "_" + \
-                str(model) + "_" + \
-                str(int(epoch)) + "_" + \
-                str(percentage) + "_" + \
-                str(hidden_size) + \
+                id_name(model, epoch, percentage, hidden_size) + \
                 "." + extension
-    print("  Model will be stored in file %s"%str(trained_model))
+    print("    Path to the file %s"%str(trained_model))
     return trained_model
 
 

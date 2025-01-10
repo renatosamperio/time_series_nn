@@ -1,14 +1,14 @@
 import os, sys
 
+from time_series_nn.data.chunk import collect_data
 from time_series_nn.models.configure_models import create_model
 from time_series_nn.train.train import model_train
-from time_series_nn.train.evaluate import validate_model, create_image
-from time_series_nn.data.chunk import collect_data
+from time_series_nn.train.evaluate import validate_model, create_image, top_performers
 from time_series_nn.utils.tickers import get_stockanalysis_tickers
 from time_series_nn.utils.tickers import download_ticker_data
 from time_series_nn.utils.tickers import get_ticker_from_file
 from time_series_nn.utils.function_params import reduce_options
-from torch.utils.data import DataLoader
+# from torch.utils.data import DataLoader
 
 from datetime import datetime
 from optparse import OptionParser, OptionGroup
@@ -98,7 +98,9 @@ def run_nn(options):
             print("  Avoiding NN model for %s"%data_source)
             continue
 
+        models_performance = []
         for nn_model in conf["model_type"]:
+            print("Evaluating %s model"%nn_model)
             info["conf"].update({"model_type": nn_model})
             
             for hs in conf["hidden_sizes"]:
@@ -122,10 +124,24 @@ def run_nn(options):
                         # it requies model to be already validated
                         if info["conf"]["save_img"]:
                             create_image(info)
+                        
+                        # get data about top performers
+                        if "errors" not in info:
+                            mc= info["conf"]
+                            print("Warning: No errors to evaluate in %s (epochs=%d, %d%%, hidden size=%s)"%(
+                                mc["model_type"],  mc["epoch"], int(mc["percentage"]*100), 
+                                mc["hidden_size"]))
+                            continue
+                        models_performance.append(info["conf"] | info["errors"])
+        
+        # sorting dictionaries to find which models performed better
+        print("Collected %d items for error analysis"% len(models_performance))
+        top_performers(models_performance, ["avg_losses", "abs_error", "sqe_error"])
 
 if __name__ == "__main__":
     valid_models = ['gru', 'rnn', 'lstm']
     valid_operations = ['train', 'evaluate']
+    valid_download_list = ['biggest-companies', 'monthly-dividend-stocks', 'top-rated-dividend']
     parser = OptionParser()
     control = OptionGroup(parser, "Control Options")
     control.add_option('-a', "--save_img", 
@@ -193,24 +209,24 @@ if __name__ == "__main__":
     tickers = OptionGroup(parser, "Configure Tickers lists")
     tickers.add_option("-l", "--list_type", 
                     default = None,
-                    action = "store", 
+                    action = "store",
                     type = "string",
                     help = "Valid list type as a CSV file")
     tickers.add_option("-p", "--path_file", 
-                    default = 'input_data',
+                    default = None,
                     action = "store", 
                     type = "string",
                     help = "Valid path to CSV file")
     tickers.add_option("-s", "--start_date", 
-        default = None,
-        action = "store", 
-        type = "string",
-        help = "Input starting date to sample stock values")
+                    default = None,
+                    action = "store", 
+                    type = "string",
+                    help = "Input starting date to sample stock values")
     tickers.add_option("-n", "--end_date", 
-        default = datetime.today().strftime('%Y-%m-%d'), # today's date
-        action = "store", 
-        type = "string",
-        help = "Input ending date to sample stock values")
+                    default = datetime.today().strftime('%Y-%m-%d'), # today's date
+                    action = "store", 
+                    type = "string",
+                    help = "Input ending date to sample stock values")
     
     parser.add_option_group(control)
     parser.add_option_group(io)
@@ -218,42 +234,52 @@ if __name__ == "__main__":
     parser.add_option_group(tickers)
     
     (options, args) = parser.parse_args()
-    # print(options)
+    print(options)
 
-    if not options.download and options.input_data_sources is None:
-        if options.list_type and options.path_file:
-            options.input_data_sources = get_input_files(options)
-        else:
-            parser.error("Required amount of input data sources")
-    elif options.input_data_sources is not None: 
-        data_sources = reduce_options(options.input_data_sources)
+    if not options.download and not options.train and not options.validate:
+        parser.error("Invalid operations should be set -w, -t or -v ")
 
     if options.output_path is None or not os.path.exists(options.output_path):
         parser.error("Required an output path")
     
-    if not options.model_type:
-        parser.error("Invalid models should be of [rnn, lstm, gru]")
-    else: 
-        options.model_type = reduce_options(options.model_type, sorted=False)
-        invalid_elem = list(set(options.model_type) - set(valid_models))
-        if len(invalid_elem)>0:
-            parser.error("Invalid models "+str(invalid_elem)+" should be of type [rnn, lstm, gru]")
-    if options.epochs_sizes is None:
-        parser.error("Required amount of epochs")
-    else: 
-        options.epochs_sizes = reduce_options(options.epochs_sizes)
+    if not options.download:
+        if not options.model_type:
+            parser.error("Invalid models should be of [rnn, lstm, gru]")
+        else: 
+            options.model_type = reduce_options(options.model_type, sorted=False)
+            invalid_elem = list(set(options.model_type) - set(valid_models))
+            if len(invalid_elem)>0:
+                parser.error("Invalid models "+str(invalid_elem)+" should be of type [rnn, lstm, gru]")
+        if options.epochs_sizes is None:
+            parser.error("Required amount of epochs")
+        else: 
+            options.epochs_sizes = reduce_options(options.epochs_sizes)
 
-    if not options.hidden_sizes:
-        parser.error("Invalid hidden size(s)")
+        if not options.hidden_sizes:
+            parser.error("Invalid hidden size(s)")
+    
+        if options.input_data_sources is None:
+            parser.error("Required amount of input data sources")
+        elif options.input_data_sources is not None: 
+            data_sources = reduce_options(options.input_data_sources)
+
     if not options.file_prefix:
         parser.error("Invalid file prefix")
-    if not options.download and not options.train and not options.validate:
-        parser.error("Invalid operations should be set -w, -t or -v ")
-
-    if options.download and not options.start_date:
-        parser.error("Required an inital date in format YYYY-MM-DD")
 
     if options.download:
+        if not options.start_date:
+            parser.error("Required an inital date in format YYYY-MM-DD")
+
+        if not options.path_file:
+            parser.error("Required a path to already formatted and downloaded list of tickers")
+
+        if not options.list_type or options.list_type not in valid_download_list:
+            parser.error("Required a path to already formatted and downloaded list of tickers, options are :%s"%str(valid_download_list))
+
+            # if options. and options.path_file:
+            #     options.input_data_sources = get_input_files(options)
+            # else:
         download_ticker(options)
+    # deal with the models training or evaluation
     else:
         run_nn(vars(options))
